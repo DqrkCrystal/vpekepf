@@ -1,0 +1,157 @@
+import turtle
+import os
+
+# Projektile (Kugeln) erschaffen
+def fire_weapon(weapon):
+    bullet = turtle.Turtle()
+    bullet.shape("circle")
+    bullet.color("red")  # Kugelfarbe
+    bullet.penup()
+    bullet.goto(weapon.xcor(), weapon.ycor())  # Position der Waffe übernehmen
+    bullet.setheading(weapon.heading())  # Kugel schießt in Richtung der Waffe
+    bullet.speed(0)
+    bullet.showturtle()  # Kugel sichtbar machen
+    return bullet  # Die Kugel zurückgeben
+
+# Ziel erstellen (z.B. einen Gegner)
+def create_target():
+    target = turtle.Turtle()
+    target.shape("square")
+    target.color("blue")
+    target.penup()
+    target.goto(0, 100)  # Setzt das Ziel in eine Startposition
+    target.health = 3  # Ziel hat 3 Leben
+    target.showturtle()  # Sicherstellen, dass das Ziel sichtbar ist
+    return target
+
+# Kollision und Schaden anwenden
+def check_collision(bullet, target):
+    if bullet.distance(target) < 20:  # Wenn die Kugel in der Nähe des Ziels ist
+        target.health -= 1  # Schaden an Ziel anrichten
+        print(f"Treffer! Ziel hat jetzt {target.health} Leben.")
+        bullet.hideturtle()  # Kugel verschwindet nach dem Treffer
+
+        if target.health <= 0:
+            target.hideturtle()  # Ziel verschwindet, wenn es keine Leben mehr hat
+            print("Ziel zerstört!")
+
+# Kugel bewegen und Kollision prüfen
+def move_bullet(bullet, target):
+    bullet.sety(bullet.ycor() + 10)  # Bewegt sich nach oben
+    check_collision(bullet, target)  # Überprüft, ob die Kugel das Ziel getroffen hat
+
+# Screen setup
+wn = turtle.Screen()
+wn.title("Game by @DqrkCrystal!!")
+wn.bgcolor("white")  # Hintergrundfarbe auf weiß ändern
+wn.setup(width=800, height=600)
+wn.tracer(0)  # Optimiert die Darstellung
+
+# Startmenü anzeigen
+def show_start_menu():
+    menu.clear()  # Löscht das Menü (falls es schon auf dem Bildschirm ist)
+    menu.write("Bullet Shooters Drücke 'Enter' zum starten.", align="center", font=("Arial", 16, "normal"))
+    wn.update()
+
+# Punktzahl anzeigen
+def update_score():
+    score_display.clear()
+    score_display.write(f"Punkte: {score}", align="left", font=("Arial", 16, "normal"))
+
+# Waffe zeichnen
+def draw_weapon():
+    weapon = turtle.Turtle()  # Erstellen der Waffe
+    weapon.shape("square")
+    weapon.color("gray")
+    weapon.shapesize(stretch_wid=1, stretch_len=5)  # Rechteckform (lange Waffe)
+    weapon.penup()  # Keine Linien hinter der Waffe
+    weapon.goto(0, -200)  # Positioniert die Waffe
+    weapon.showturtle()  # Waffe sichtbar machen
+    weapon.setheading(90)  # Anfangsrichtung der Waffe ist nach oben
+    return weapon  # Die Waffe zurückgeben
+
+# Waffe nach rechts bewegen
+def move_right():
+    global weapon  # Globales weapon verwenden
+    x = weapon.xcor()
+    x += 20  # Bewegt sich um 20 Einheiten nach rechts
+    weapon.setx(x)
+
+# Waffe nach links bewegen
+def move_left():
+    global weapon  # Globales weapon verwenden
+    x = weapon.xcor()
+    x -= 20  # Bewegt sich um 20 Einheiten nach links
+    weapon.setx(x)
+
+# Schussrichtung nach oben ändern
+def shoot():
+    global game_started, score  # Beide globalen Variablen müssen hier verwendet werden
+    if not game_started:
+        game_started = True  # Spiel wird gestartet
+        show_game_screen()  # Zeigt das Spiel an
+
+    bullet = fire_weapon(weapon)  # Kugel erschaffen
+    while bullet.ycor() < 300:  # Stoppt, wenn die Kugel oben ist
+        move_bullet(bullet, target)  # Kugel bewegen und Kollision prüfen
+        wn.update()  # Bildschirm aktualisieren
+
+# Zeigt den eigentlichen Spielbildschirm an
+def show_game_screen():
+    global score
+    score = 0  # Punktzahl zurücksetzen
+    update_score()  # Punktzahl anzeigen
+    target.showturtle()  # Ziel sichtbar machen
+
+# Highscore laden
+def load_highscore():
+    if os.path.exists("highscore.txt"):
+        with open("highscore.txt", "r") as f:
+            return int(f.read())
+    return 0
+
+# Highscore speichern
+def save_highscore():
+    global score
+    if score > highscore:
+        with open("highscore.txt", "w") as f:
+            f.write(str(score))
+    highscore_display.clear()
+    highscore_display.write(f"Highscore: {highscore}", align="right", font=("Arial", 16, "normal"))
+
+# Tastenbelegung zum Schießen und für die Bewegung
+wn.listen()
+wn.onkey(shoot, "space")  # Wenn Leertaste gedrückt wird, wird geschossen
+wn.onkey(move_right, "Right")  # Waffe nach rechts bewegen (Pfeil rechts)
+wn.onkey(move_left, "Left")  # Waffe nach links bewegen (Pfeil links)
+
+# Initialisieren
+menu = turtle.Turtle()  # Menü-Turtle für Startbildschirm
+menu.hideturtle()
+score_display = turtle.Turtle()  # Anzeige für die Punktzahl
+score_display.hideturtle()
+highscore_display = turtle.Turtle()  # Anzeige für Highscore
+highscore_display.hideturtle()
+
+# Highscore laden und anzeigen
+highscore = load_highscore()
+highscore_display.penup()
+highscore_display.goto(350, 250)
+highscore_display.showturtle()
+save_highscore()  # Zeige den Highscore
+
+# Spielstatus
+game_started = False
+score = 0  # Initialisierung der Punktzahl
+
+# Ziel erstellen
+target = create_target()  # Ziel auf dem Bildschirm erstellen
+
+# Waffe erstellen
+weapon = draw_weapon()  # Die Waffe auf dem Bildschirm anzeigen
+
+# Startmenü anzeigen
+show_start_menu()
+
+# Mainloop
+wn.mainloop()
